@@ -11,8 +11,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Potential datasets
 ```{r}
-ISIT <- read.delim('ISIT.txt')
-RK <- read.delim('RoadKills.txt')
+ISIT <- read.delim('ISIT.txt') # bioluminescence dataset (Zuur Ch. 3, 17)
+RK <- read.delim('RoadKills.txt') # amphibian roadkills dataset (Zuur Ch. 16)
 head(ISIT)
 head(RK)
 ```
