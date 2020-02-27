@@ -1,6 +1,6 @@
 ---
-title: "ESPM215_GAM"
-author: "Kane Russell and Dorothy Chen"
+title: "ESPM 215 - Generalized Additive Models (GAMs)"
+author: "Dorothy Chen, Kenzo Esquivel, Kane Russell, and Yvonne Socolar"
 date: "2/25/2020"
 output: html_document
 ---
@@ -9,7 +9,19 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+## Potential datasets
+```{r}
 
+```
+
+
+## LOESS Span Sizes
+
+## GAM with single explanatory variable - go through output
+
+## Create graph similar to Fig. 3.11 (Zuur et al. 2009) of lambda vs GCV, compare with automatic GCV
+
+## Comparison of GLM, GAM, GAMM using AIC, GCV, analysis of deviance, power analysis?
 
 
 
