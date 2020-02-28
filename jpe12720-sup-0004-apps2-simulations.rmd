@@ -1,0 +1,183 @@
+---
+title: "Simulation study"
+output: pdf_document
+---
+
+
+```{r, echo = FALSE, message =FALSE}
+library(mgcv)
+library(poptrend)
+setwd("~/Projekt/SFT/Trends")
+runSim = FALSE
+simName = "randomSim"
+if (runSim) {
+  nsim = 100
+  yearSD = 0.1
+  siteSD = 0.3
+  nyear = 25
+  nsite = 100
+  if (simName == "randomSim") {
+    detTrend = function(years) {
+      rep(0, length(years))
+    }
+  }
+  if (simName == "expitSim") {
+    detTrend = function(years) {
+      log(0.5 + 0.5 * plogis(15 - (years)))
+    }
+  }
+  if (simName == "polySim") {
+    detTrend = function(years) {
+      (-.9 * years^3 + 23 * years^2 - 70 * years + 47.9) / 3000
+    }
+  }
+  simData = function() {
+    yeareff =  detTrend(1:nyear) + yearSD * rnorm(nyear)
+    siteeff =  siteSD * rnorm(nsite)
+    data = data.frame(count = NA, year = rep(1:nyear, nsite), site = factor(rep(paste0("site", 1:nsite), each = nyear)))
+    data$count = rpois(nyear*nsite, lambda  = exp(log(3) + yeareff[data$year] + siteeff[rep( 1:nsite, each = nyear)]))
+    data
+  }
+  simRes = list()
+  for (i in 1:nsim) {
+    data = simData()
+    grid = seq(.5,25.5, length.out = 101)
+    tr = fitTrend(count ~ trend(year, k = ceiling(nyear/3) + 1, fx = FALSE, tempRE = TRUE) + site, data = data, nGrid = c(101,.5,25.5), gamModel = TRUE)
+    edf = summary(tr$gam)$s.table["s(year)", "edf"]
+    tr$gam = NULL
+    trFX= fitTrend(count ~ trend(year, k = ceiling(nyear/3) + 1, fx = TRUE, tempRE = TRUE) + site, data = data, nGrid = c(101,.5,25.5), gamModel = FALSE)
+    trFew = fitTrend(count ~ trend(year, k = ceiling(nyear/3) + 1, fx = FALSE, tempRE = FALSE) + site, data = data, nGrid = c(101,.5,25.5), gamModel = TRUE)
+    edfFew = summary(trFew$gam)$s.table["s(year)", "edf"]
+    tr$gam = NULL
+    trFewFX = fitTrend(count ~ trend(year, k = ceiling(nyear/3) + 1, fx = TRUE, tempRE = FALSE) + site, data = data, nGrid = c(101,.5,25.5),gamModel = FALSE)
+    simRes = c(simRes, list(list(data = data, tr = tr, trFX = trFX, trFew = trFew, trFewFX = trFewFX, edf = edf, edfFew = edfFew)))
+  }
+  save.image(file = paste0(simName, ".Rdata"))
+} else {
+  load(paste0(simName, ".Rdata"))
+}
+```
+
+
+
+This document presents the results of a simulation study on trend estimates obtained by GAM and GAMM methods. 
+The model used to generate data is:
+
+$$y_{i, t} \sim Poisson(exp(log(3) + f(t) + `r yearSD` \delta_t + `r siteSD` \gamma_i)) $$
+
+where $\delta_i, \gamma_t \sim N(0, 1)$ for $i = 1$ to `r nsite` sites and $t = 1$ to `r nyear` years, and $f(t)$ is a log-trend given by the following r-function:
+```{r, echo = FALSE, comment = NA} 
+detTrend
+```
+
+The trend (i.e. "exp(f(t))") looks like this:
+
+```{r, echo = FALSE, fig.width = 5, fig.height = 5}
+isGridP = simRes[[1]]$tr$trendFrame$isGridP
+grid = simRes[[1]]$tr$trendFrame$year
+trueTrend = exp(detTrend(grid))
+plot(grid, trueTrend, ylim = c(0,1.5), type = "l", xlab = "year", ylab = "trend",lwd = 2)
+```
+
+Models are fit using the GAM trend model of Fewster et al (2003) and the GAMM model propsed in the main paper, both assuming a quasi-Poisson response. Both models are fit with and without automatic selection of the degrees of freedom based on Generalized Cross Validation. 
+In the former case the degrees of freedom are restricted to be less than approximately a third of the number of years (more specifically to less than `r ceiling(nyear/3)`), and in the latter they are fixed at this number. 
+Tests and confidence intervals are based on bootstrap samples using the estimated variance covariance matrix, which ignores uncertainty in the selection of degrees of freedom and variance parameters of random effects.
+
+The average estimated trend across the `r length(simRes)` simulations:
+
+```{r, echo = FALSE, fig.width=9,fig.height=9}
+mt = sapply(simRes, function(sim) {ut = sim$tr$trendFrame$trend; ut/mean(ut)})
+mtFX = sapply(simRes, function(sim) {ut = sim$trFX$trendFrame$trend; ut/mean(ut)})
+mtFew = sapply(simRes, function(sim) {ut = sim$trFew$trendFrame$trend; ut/mean(ut)})
+mtFewFX = sapply(simRes, function(sim) {ut = sim$trFewFX$trendFrame$trend; ut/mean(ut)})
+par(mfcol = c(2,2), ps = 10)
+plot(grid, trueTrend/mean(trueTrend), col = "red", ylim = c(0,1.5), type = "l", xlab = "year", ylab = "mean estimated trend", main = "random year effects, df-selection")
+points(grid, apply(mt,1,mean), type = "l")
+plot(grid, trueTrend/mean(trueTrend), col = "red", ylim = c(0,1.5), type = "l", xlab = "year", ylab = "mean estimated trend", main = "random year effects, no df-selection")
+points(grid, apply(mtFX,1,mean), type = "l")
+plot(grid, trueTrend/mean(trueTrend), col = "red", ylim = c(0,1.5), type = "l", xlab = "year", ylab = "mean estimated trend", main = "no random year effects, df-selection")
+points(grid, apply(mtFew,1,mean), type = "l")
+plot(grid, trueTrend/mean(trueTrend), col = "red", ylim = c(0,1.5), type = "l", xlab = "year", ylab = "mean estimated trend", main = "no random year effects, no df-selection")
+points(grid, apply(mtFewFX,1,mean), type = "l")
+```
+
+The root mean square error of estimated trends:
+
+```{r, echo = FALSE, fig.width=9,fig.height=9}
+mdet = exp(detTrend(grid))
+mdet = mdet/mean(mdet)
+par(mfcol = c(2,2), ps = 10)
+plot(grid, apply(mt - mdet,1,function(m) sqrt(mean(m^2))), ylim = c(0,.2), type = "l", xlab = "year", ylab = "rmse", main = "random year effects, df-selection")
+plot(grid, apply(mtFX - mdet,1,function(m) sqrt(mean(m^2))), ylim = c(0,.2), type = "l", xlab = "year", ylab = "rmse", main = "random year effects, no df-selection")
+plot(grid, apply(mtFew - mdet,1,function(m) sqrt(mean(m^2))), ylim = c(0,.2), type = "l", xlab = "year", ylab = "rmse", main = "no random year effects, df-selection")
+plot(grid, apply(mtFewFX - mdet,1,function(m) sqrt(mean(m^2))), ylim = c(0,.2), type = "l", xlab = "year", ylab = "rmse", main = "no random year effects, no df-selection")
+```
+
+Standard deviation of estimated trends accross the simulations:
+
+```{r, echo = FALSE, fig.width=9,fig.height=9}
+par(mfcol = c(2,2), ps = 10)
+plot(grid, apply(mt,1,sd), ylim = c(0,.2), type = "l", xlab = "year", ylab = "sd estimated trend", main = "random year effects, df-selection")
+plot(grid, apply(mtFX,1,sd), ylim = c(0,.2), type = "l", xlab = "year", ylab = "sd estimated trend", main = "random year effects, no df-selection")
+plot(grid, apply(mtFew,1,sd), ylim = c(0,.2), type = "l", xlab = "year", ylab = "sd estimated trend", main = "no random year effects, df-selection")
+plot(grid, apply(mtFewFX,1,sd), ylim = c(0,.2), type = "l", xlab = "year", ylab = "sd estimated trend", main = "no random year effects, no df-selection")
+```
+
+
+The bias of estimated trends:
+
+```{r, echo = FALSE, fig.width=9,fig.height=9}
+mdet = exp(detTrend(grid))
+mdet = mdet/mean(mdet)
+par(mfcol = c(2,2), ps = 10)
+plot(grid, apply(mt,1,mean) - mdet, ylim = c(-.1,.1), type = "l", xlab = "year", ylab = "bias", main = "random year effects, df-selection")
+plot(grid, apply(mtFX,1,mean) - mdet, ylim = c(-.1,.1), type = "l", xlab = "year", ylab = "bias", main = "random year effects, no df-selection")
+plot(grid, apply(mtFew,1,mean) - mdet, ylim = c(-.1,.1), type = "l", xlab = "year", ylab = "bias", main = "no random year effects, df-selection")
+plot(grid, apply(mtFewFX,1,mean) - mdet, ylim = c(-.1,.1), type = "l", xlab = "year", ylab = "bias", main = "no random year effects, no df-selection")
+```
+
+The figures below give the proportion of simulations, for each time points, for which the trend was found significant (in either direction) at an alpha level of 0.1:
+
+```{r, echo = FALSE, fig.width=9,fig.height=9}
+pval = sapply(simRes, function(sim) {apply(poptrend:::getGradient(sim$tr$bootTrend), 1 , function(x) {mean(x > 0)})})
+mpval = apply(pval, 1, function(p) mean(abs(2*p - 1) > .9))
+pvalFX = sapply(simRes, function(sim) {apply(poptrend:::getGradient(sim$trFX$bootTrend), 1 , function(x) {mean(x > 0)})})
+mpvalFX = apply(pvalFX, 1, function(p) mean(abs(2*p - 1) > .9))
+pvalFew = sapply(simRes, function(sim) {apply(poptrend:::getGradient(sim$trFew$bootTrend), 1 , function(x) {mean(x > 0)})})
+mpvalFew = apply(pvalFew, 1, function(p) mean(abs(2*p - 1) > .9))
+pvalFewFX = sapply(simRes, function(sim) {apply(poptrend:::getGradient(sim$trFewFX$bootTrend), 1 , function(x) {mean(x > 0)})})
+mpvalFewFX = apply(pvalFewFX, 1, function(p) mean(abs(2*p - 1) > .9))
+par(mfcol = c(2,2), ps = 10)
+plot(grid[2:(length(grid)-1)], mpval, ylim = c(0,1), type = "l", xlab = "year", ylab = "proportion significant at 0.1", main = "random year effects, df-selection")
+abline(h = 0.1)
+plot(grid[2:(length(grid)-1)], mpvalFX, ylim = c(0,1), type = "l", xlab = "year", ylab = "proportion significant at 0.1", main = "random year effects, no df-selection")
+abline(h = 0.1)
+plot(grid[2:(length(grid)-1)], mpvalFew, ylim = c(0,1), type = "l", xlab = "year", ylab = "proportion significant at 0.1", main = "no random year effects, df-selection")
+abline(h = 0.1)
+plot(grid[2:(length(grid)-1)], mpvalFewFX, ylim = c(0,1), type = "l", xlab = "year", ylab = "proportion significant at 0.1", main = "no random year effects, no df-selection")
+abline(h = 0.1)
+```
+
+Estimated degrees of freedom (under automatic df selection) with and without random year effects:
+
+```{r, echo = FALSE, fig.width=9,fig.height=9}
+edf = sapply(simRes, function(sim) {sim$edf})
+edfFew = sapply(simRes, function(sim) {sim$edfFew})
+par(mfcol = c(1,2), ps = 10)
+hist(edf, xlim = c(0,ceiling(nyear/3) +1), xlab = "edf", main = "random year effects")
+abline(v = ceiling(nyear/3))
+hist(edfFew, xlim = c(0,ceiling(nyear/3) + 1), xlab = "edf", main = "no random year effects")
+abline(v = ceiling(nyear/3))
+```
+
+Each page below give the trends estimated by the different methods from a single simulated data set:
+
+```{r, echo = FALSE, fig.width=9,fig.height=9}
+par(mfcol = c(2,2), ps = 10)
+for (i in 1:min(10, length(simRes))) {
+  plot(simRes[[i]]$tr, ylim = c(0,1.5), main = "random year effects, df-selection")
+  plot(simRes[[i]]$trFX, ylim = c(0,1.5), main = "random year effects, no df-selection")
+  plot(simRes[[i]]$trFew, ylim = c(0,1.5), main = "no random year effects, df-selection")
+  plot(simRes[[i]]$trFewFX, ylim = c(0,1.5), main = "no random year effects, no df-selection")
+}
+```
