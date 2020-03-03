@@ -23,10 +23,25 @@ head(GC)
 
 ## Show model fitting with different values of lambda
 
+
+
 ## Create graph similar to Fig. 3.11 (Zuur et al. 2009) of lambda vs GCV, compare with automatic GCV
+
+
 
 ## different kinds of splines display
 
+
+
+## fit GAM and GAMM for paper data (and GLM?)
+
+
+
+## different packages
+
+
+
+## Explain model summary outputs
 
 
 
