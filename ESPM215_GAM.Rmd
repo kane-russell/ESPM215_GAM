@@ -13,19 +13,20 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 ISIT <- read.delim('ISIT.txt') # bioluminescence dataset (Zuur Ch. 3, 17)
 RK <- read.delim('RoadKills.txt') # amphibian roadkills dataset (Zuur Ch. 16)
+GF <- read.csv('jpe12720-sup-0003-apps2-greenfinch.csv')
+GC <- read.csv('jpe12720-sup-0002-apps2-goldcrest.csv')
 head(ISIT)
 head(RK)
+head(GF)
+head(GC)
 ```
 
-
-## LOESS Span Sizes
-
-## GAM with single explanatory variable - go through output
+## Show model fitting with different values of lambda
 
 ## Create graph similar to Fig. 3.11 (Zuur et al. 2009) of lambda vs GCV, compare with automatic GCV
 
-## Comparison of GLM, GAM, GAMM using AIC, GCV, analysis of deviance, power analysis?
-- multiple explanatory variables, interactions?
+## different kinds of splines display
+
 
 
 
