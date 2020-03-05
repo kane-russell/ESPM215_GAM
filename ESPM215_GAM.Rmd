@@ -20,9 +20,15 @@ head(RK)
 
 ## LOESS Span Sizes
 
+
+
 ## GAM with single explanatory variable - go through output
 
+
+
 ## Create graph similar to Fig. 3.11 (Zuur et al. 2009) of lambda vs GCV, compare with automatic GCV
+
+
 
 ## Comparison of GLM, GAM, GAMM using AIC, GCV, analysis of deviance, power analysis?
 - multiple explanatory variables, interactions?
