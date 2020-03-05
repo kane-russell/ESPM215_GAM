@@ -13,16 +13,24 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 ISIT <- read.delim('ISIT.txt') # bioluminescence dataset (Zuur Ch. 3, 17)
 RK <- read.delim('RoadKills.txt') # amphibian roadkills dataset (Zuur Ch. 16)
+GF <- read.csv('jpe12720-sup-0003-apps2-greenfinch.csv')
+GC <- read.csv('jpe12720-sup-0002-apps2-goldcrest.csv')
 head(ISIT)
 head(RK)
+head(GF)
+head(GC)
 ```
 
+## Show model fitting with different values of lambda
 
 ## LOESS Span Sizes
 
+<<<<<<< HEAD
 
 
 ## GAM with single explanatory variable - go through output
+=======
+>>>>>>> f9076cc1c00a953644cfb91e9e5fb978d52f1fe1
 
 
 
@@ -30,8 +38,24 @@ head(RK)
 
 
 
+<<<<<<< HEAD
 ## Comparison of GLM, GAM, GAMM using AIC, GCV, analysis of deviance, power analysis?
 - multiple explanatory variables, interactions?
+=======
+## different kinds of splines display
+
+
+
+## fit GAM and GAMM for paper data (and GLM?)
+
+
+
+## different packages
+
+
+
+## Explain model summary outputs
+>>>>>>> f9076cc1c00a953644cfb91e9e5fb978d52f1fe1
 
 
 
