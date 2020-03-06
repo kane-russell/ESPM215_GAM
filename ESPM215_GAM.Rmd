@@ -24,9 +24,9 @@ head(GC)
 ### Different packages for GAM processing. 
 
 There are a number of different packages for GAM in R. 
-  - the *gam* package was written by Hastie and Tibshirani (credited for introducing GAMs) and estimates the smoothing functions using a back-fitting algorithm (which alloes for estimation of one smoother at a time)   \
+  - the *gam* package was written by Hastie and Tibshirani (credited for introducing GAMs) and estimates the smoothing functions using a back-fitting algorithm (which allows for estimation of one smoother at a time)   \
   - the *mgcv* package, standing for "Mixed GAM Computation Vehicle with Automatic Smoothness Estimation", was introduced by Wood, and uses splines (which reduces function approximation error for a given dimension of smoothing basis). This package can handle large datasets, do cross validation, and allow for expansions into Generalized Additive Mixed Modeling (GAMM) frameworks. GAMM fitting relies on the nmle package, which is great for normally distributed models but not suitable for Poisson or Binomial GLMMs. A detailed walkthrough can be found at [this site](https://people.maths.bris.ac.uk/~sw15190/mgcv/tampere/mgcv.pdf)    \
-  - the *gamm4* package, which is similar to the *mgcv* package but relies on the lme4 package for calculations (Fabian Schiepl trick)  \
+  - the *gamm4* package, which is similar to the *mgcv* package but relies on the lme4 package for calculations (Fabian Scheipl trick)  \
 
 ```{r, echo = TRUE, message=FALSE, eval = F}
 install.packages("gam")
@@ -44,8 +44,13 @@ library(gamm4)
 ```
 
 
+# Single value GAM fitting and talking about the R output 
+
+
+
 ## Show model fitting with different values of lambda
 
+### INclude observed values on the fitted line 
 
 =======
 ```{r}
@@ -132,7 +137,11 @@ plot(gam(Sources ~ fStation + fMonth + s(Depth1000, sp = 1.1), data = ISIT2))
 ```
 
 
-## LOESS Span Sizes
+# More complex spline fitting and incorporating multiple variables with different smoothing techniques 
+
+
+
+
 
 
 
