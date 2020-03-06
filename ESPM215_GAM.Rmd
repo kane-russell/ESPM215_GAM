@@ -9,6 +9,16 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+- contrast GLM vs GAM graphs
+- explain single variable GAM output
+- Exercise: try to visually choose optimal lambda parameter
+- Create lambda vs. GCV graph to choose optimal lambda
+- Compare with automatic GCV from model fit
+- Incorporating random effects with Knape data
+- Discussion on paper??
+
+
+
 ## Potential datasets
 ```{r}
 ISIT <- read.delim('ISIT.txt') # bioluminescence dataset (Zuur Ch. 3, 17)
@@ -36,10 +46,11 @@ install.packages("gamm4")
 ```
 
 ```{r, echo = TRUE}
-library(gam)
+#library(gam)
 library(mgcv)
-library(gamm4)
-
+#library(gamm4)
+library(nlme)
+library(tidyverse)
 
 ```
 
@@ -73,7 +84,7 @@ summary(gamfit1)
 ```
 
 ```{r}
-gamfit2 <- gam(Sources ~ s(fStation, bs = 're') + s(Depth1000) + fMonth, 
+gamfit2 <- mgcv::gam(Sources ~ s(fStation, bs = 're') + s(Depth1000) + fMonth, 
                data = ISIT2)
 plot(gamfit2)
 gam.check(gamfit2)
