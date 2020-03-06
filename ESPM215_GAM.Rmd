@@ -81,29 +81,35 @@ AIC(gammfit3$lme)
 ```
 
 ```{r}
-library(cvTools)
-library(tidyverse)
 gamfit1$sp
 gamfit1$gcv.ubre
 ```
 
 ```{r}
-lambda <- seq(0.0001, 0.003, by = 0.0001)
-cv_score <- 0
+library(tidyverse)
+
+lambda <- seq(0.0001, 0.002, by = 0.0001)
+GCV <- 0
 
 for (i in 1:length(lambda)) {
-  gam_init_fit <- gam(Sources ~ fStation + fMonth + s(Depth1000, sp = lambda[i]), data = ISIT2) 
-  #cvFit_1 <- cvFit(gam_init_fit, data = d, y = d$Sources16, K = length(Sources16), foldType = "consecutive")
-  cv_score[i] <- gam_init_fit$gcv.ubre
+  gam_fit <- gam(Sources ~ fStation + fMonth + s(Depth1000, sp = lambda[i]), data = ISIT2) 
+  GCV[i] <- gam_fit$gcv.ubre
 }
 
-table <- data.frame(lambda, cv_score)
+table <- data.frame(lambda, GCV)
 table
 
 ggplot(data = table) +
-  aes(x = lambda, y = cv_score) +
+  aes(x = lambda, y = GCV) + 
   geom_line()
 ```
+
+```{r}
+plot(gam(Sources ~ fStation + fMonth + s(Depth1000, sp = 0.00011), data = ISIT2))
+plot(gam(Sources ~ fStation + fMonth + s(Depth1000, sp = 0.0011), data = ISIT2))
+plot(gam(Sources ~ fStation + fMonth + s(Depth1000, sp = 1.1), data = ISIT2))
+```
+
 
 ## LOESS Span Sizes
 
