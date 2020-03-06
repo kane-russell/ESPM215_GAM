@@ -21,6 +21,27 @@ head(GF)
 head(GC)
 ```
 
+### Different packages for GAM processing. 
+
+There are a number of different packages for GAM in R. 
+  - the *gam* package was written by Hastie and Tibshirani (credited for introducing GAMs) and estimates the smoothing functions using a back-fitting algorithm (which alloes for estimation of one smoother at a time)   \
+  - the *mgcv* package, standing for "Mixed GAM Computation Vehicle with Automatic Smoothness Estimation", was introduced by Wood, and uses splines (which reduces function approximation error for a given dimension of smoothing basis). This package can handle large datasets, do cross validation, and allow for expansions into Generalized Additive Mixed Modeling (GAMM) frameworks. GAMM fitting relies on the nmle package, which is great for normally distributed models but not suitable for Poisson or Binomial GLMMs. A detailed walkthrough can be found at [this site](https://people.maths.bris.ac.uk/~sw15190/mgcv/tampere/mgcv.pdf)    \
+  - the *gamm4* package, which is similar to the *mgcv* package but relies on the lme4 package for calculations (Fabian Schiepl trick)  \
+
+```{r, echo = TRUE, message=FALSE, eval = F}
+install.packages("gam")
+install.packages("mgcv")
+install.packages("gamm4")
+
+```
+
+```{r, echo = TRUE}
+library(gam)
+library(mgcv)
+library(gamm4)
+
+
+```
 
 
 ## Show model fitting with different values of lambda
