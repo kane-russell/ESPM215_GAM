@@ -26,77 +26,88 @@ head(GC)
 ## Show model fitting with different values of lambda
 
 
-
-
-## GAM with single explanatory variable - go through output
 =======
-### Different packages for GAM processing. 
-
-There are a number of different packages for GAM in R. 
-  - the *gam* package was written by Hastie and Tibshirani (credited for introducing GAMs) and estimates the smoothing functions using a back-fitting algorithm (which alloes for estimation of one smoother at a time)   \
-  - the *mgcv* package, standing for "Mixed GAM Computation Vehicle with Automatic Smoothness Estimation", was introduced by Wood, and uses splines (which reduces function approximation error for a given dimension of smoothing basis). This package can handle large datasets, do cross validation, and allow for expansions into Generalized Additive Mixed Modeling (GAMM) frameworks. GAMM fitting relies on the nmle package, which is great for normally distributed models but not suitable for Poisson or Binomial GLMMs. A detailed walkthrough can be found at [this site](https://people.maths.bris.ac.uk/~sw15190/mgcv/tampere/mgcv.pdf)    \
-  - the *gamm4* package, which is similar to the *mgcv* package but relies on the lme4 package for calculations (Fabian Schiepl trick)  \
-
-```{r, echo = TRUE, message=FALSE, eval = F}
-install.packages("gam")
-install.packages("mgcv")
-install.packages("gamm4")
-
+```{r}
+ISIT$fMonth <- factor(ISIT$Month)
+ISIT$fStation <- factor(ISIT$Station)
+ISIT$fYear <- factor(ISIT$Year)
+ISIT2 <- ISIT[ISIT$fStation != "4" &
+              ISIT$fStation != "5" &
+              ISIT$fStation != "10" ,]
+ISIT2$Depth1000 <- ISIT2$SampleDepth/1000
+head(ISIT2)
 ```
-
-```{r, echo = TRUE}
-library(gam)
-library(mgcv)
-library(gamm4)
-
-
-```
-
-
-## How do you find the optimal amount of smoothing?  
-- Estimate the optimal $\lambda$ parameter. The lambda parameter is often referred to as a tuning parameter and is used to control the relative weight that should be given to smoothing vs fit of the data. In this next example, we are going to fix the knot points and estimate the GAM using different tuning parameters of lambda.  
-
-### Create graph similar to Fig. 3.11 (Zuur et al. 2009) of lambda vs GCV, compare with automatic GCV
-
 
 ```{r}
-
-# Figure 3.5 book code
-op<- par(mfrow=c(2, 2), mar=c(5, 4, 1, 2))
-Sources16<- ISIT$Sources[ISIT$Station==16]
-Depth16<- ISIT$SampleDepth[ISIT$Station==16]
-plot(Depth16, Sources16, type="p")
-M3<- mgcv::gam(Sources16 ~ s(Depth16, fx=FALSE, k=-1,bs="cr")) #Cross-validation used to estimate optimum amount of smoothing 
-plot(M3, se=TRUE)
-M3pred<- predict(M3, se=TRUE, type="response")
-plot(Depth16, Sources16, type="p")
-I1<- order(Depth16)
-lines(Depth16[I1], M3pred$fit[I1], lty=1)
-lines(Depth16[I1], M3pred$fit[I1]+2*M3pred$se[I1],lty=2)
-lines(Depth16[I1], M3pred$fit[I1]-2*M3pred$se[I1],lty=2)
-
+gamfit1 <- gam(Sources ~ fStation + s(Depth1000) + fMonth, 
+               data = ISIT2)
+plot(gamfit1)
+gam.check(gamfit1)
+summary(gamfit1)
 ```
 
+```{r}
+gamfit2 <- gam(Sources ~ s(fStation, bs = 're') + s(Depth1000) + fMonth, 
+               data = ISIT2)
+plot(gamfit2)
+gam.check(gamfit2)
+summary(gamfit2)
+```
+
+```{r}
+gammfit3 <- gamm(Sources ~ s(Depth1000) + fMonth, 
+                 random = list(fStation =~ 1), 
+                 data = ISIT2)
+plot(gammfit3$gam)
+gam.check(gammfit3$gam)
+summary(gammfit3$gam)
+summary(gammfit3$lme)
+```
+
+```{r}
+# gammfit4 <- gamm(Sources ~ s(Depth1000) + fMonth, 
+#                  random = list(fStation =~ 1), 
+#                  data = ISIT2, 
+#                  weights = varComb(varIdent(form =~ 1 | fStation), 
+#                                    varPower(form =~ Depth1000 | fStation)), 
+#                  method = "REML", 
+#                  control = lmeControl(niterEM = 5000, msMaxIter = 1000))
+```
+
+```{r}
+AIC(gamfit1)
+AIC(gamfit2)
+AIC(gammfit3$lme)
+```
+
+```{r}
+library(cvTools)
+library(tidyverse)
+gamfit1$sp
+gamfit1$gcv.ubre
+```
+
+```{r}
+lambda <- seq(0.0001, 0.003, by = 0.0001)
+cv_score <- 0
+
+for (i in 1:length(lambda)) {
+  gam_init_fit <- gam(Sources ~ fStation + fMonth + s(Depth1000, sp = lambda[i]), data = ISIT2) 
+  #cvFit_1 <- cvFit(gam_init_fit, data = d, y = d$Sources16, K = length(Sources16), foldType = "consecutive")
+  cv_score[i] <- gam_init_fit$gcv.ubre
+}
+
+table <- data.frame(lambda, cv_score)
+table
+
+ggplot(data = table) +
+  aes(x = lambda, y = cv_score) +
+  geom_line()
+```
+
+## LOESS Span Sizes
 
 
-<<<<<<< HEAD
-## Comparison of GLM, GAM, GAMM using AIC, GCV, analysis of deviance, power analysis?
-- multiple explanatory variables, interactions?
-=======
-## different kinds of splines display
-
-
-
-## fit GAM and GAMM for paper data (and GLM?)
-
-
-
-## different packages
-
-
-
-## Explain model summary outputs
->>>>>>> f9076cc1c00a953644cfb91e9e5fb978d52f1fe1
 
 
 
