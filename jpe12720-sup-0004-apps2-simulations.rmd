@@ -7,7 +7,6 @@ output: pdf_document
 ```{r, echo = FALSE, message =FALSE}
 library(mgcv)
 library(poptrend)
-setwd("~/Projekt/SFT/Trends")
 runSim = FALSE
 simName = "randomSim"
 if (runSim) {
