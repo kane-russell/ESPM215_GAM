@@ -21,20 +21,61 @@ head(GF)
 head(GC)
 ```
 
+
+
 ## Show model fitting with different values of lambda
 
-## LOESS Span Sizes
 
-<<<<<<< HEAD
 
 
 ## GAM with single explanatory variable - go through output
 =======
->>>>>>> f9076cc1c00a953644cfb91e9e5fb978d52f1fe1
+### Different packages for GAM processing. 
+
+There are a number of different packages for GAM in R. 
+  - the *gam* package was written by Hastie and Tibshirani (credited for introducing GAMs) and estimates the smoothing functions using a back-fitting algorithm (which alloes for estimation of one smoother at a time)   \
+  - the *mgcv* package, standing for "Mixed GAM Computation Vehicle with Automatic Smoothness Estimation", was introduced by Wood, and uses splines (which reduces function approximation error for a given dimension of smoothing basis). This package can handle large datasets, do cross validation, and allow for expansions into Generalized Additive Mixed Modeling (GAMM) frameworks. GAMM fitting relies on the nmle package, which is great for normally distributed models but not suitable for Poisson or Binomial GLMMs. A detailed walkthrough can be found at [this site](https://people.maths.bris.ac.uk/~sw15190/mgcv/tampere/mgcv.pdf)    \
+  - the *gamm4* package, which is similar to the *mgcv* package but relies on the lme4 package for calculations (Fabian Schiepl trick)  \
+
+```{r, echo = TRUE, message=FALSE, eval = F}
+install.packages("gam")
+install.packages("mgcv")
+install.packages("gamm4")
+
+```
+
+```{r, echo = TRUE}
+library(gam)
+library(mgcv)
+library(gamm4)
 
 
+```
 
-## Create graph similar to Fig. 3.11 (Zuur et al. 2009) of lambda vs GCV, compare with automatic GCV
+
+## How do you find the optimal amount of smoothing?  
+- Estimate the optimal $\lambda$ parameter. The lambda parameter is often referred to as a tuning parameter and is used to control the relative weight that should be given to smoothing vs fit of the data. In this next example, we are going to fix the knot points and estimate the GAM using different tuning parameters of lambda.  
+
+### Create graph similar to Fig. 3.11 (Zuur et al. 2009) of lambda vs GCV, compare with automatic GCV
+
+
+```{r}
+
+# Figure 3.5 book code
+op<- par(mfrow=c(2, 2), mar=c(5, 4, 1, 2))
+Sources16<- ISIT$Sources[ISIT$Station==16]
+Depth16<- ISIT$SampleDepth[ISIT$Station==16]
+plot(Depth16, Sources16, type="p")
+M3<- mgcv::gam(Sources16 ~ s(Depth16, fx=FALSE, k=-1,bs="cr")) #Cross-validation used to estimate optimum amount of smoothing 
+plot(M3, se=TRUE)
+M3pred<- predict(M3, se=TRUE, type="response")
+plot(Depth16, Sources16, type="p")
+I1<- order(Depth16)
+lines(Depth16[I1], M3pred$fit[I1], lty=1)
+lines(Depth16[I1], M3pred$fit[I1]+2*M3pred$se[I1],lty=2)
+lines(Depth16[I1], M3pred$fit[I1]-2*M3pred$se[I1],lty=2)
+
+```
 
 
 
