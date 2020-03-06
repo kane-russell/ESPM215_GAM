@@ -23,6 +23,84 @@ head(GC)
 
 ## Show model fitting with different values of lambda
 
+```{r}
+ISIT$fMonth <- factor(ISIT$Month)
+ISIT$fStation <- factor(ISIT$Station)
+ISIT$fYear <- factor(ISIT$Year)
+ISIT2 <- ISIT[ISIT$fStation != "4" &
+              ISIT$fStation != "5" &
+              ISIT$fStation != "10" ,]
+ISIT2$Depth1000 <- ISIT2$SampleDepth/1000
+head(ISIT2)
+```
+
+```{r}
+gamfit1 <- gam(Sources ~ fStation + s(Depth1000) + fMonth, 
+               data = ISIT2)
+plot(gamfit1)
+gam.check(gamfit1)
+summary(gamfit1)
+```
+
+```{r}
+gamfit2 <- gam(Sources ~ s(fStation, bs = 're') + s(Depth1000) + fMonth, 
+               data = ISIT2)
+plot(gamfit2)
+gam.check(gamfit2)
+summary(gamfit2)
+```
+
+```{r}
+gammfit3 <- gamm(Sources ~ s(Depth1000) + fMonth, 
+                 random = list(fStation =~ 1), 
+                 data = ISIT2)
+plot(gammfit3$gam)
+gam.check(gammfit3$gam)
+summary(gammfit3$gam)
+summary(gammfit3$lme)
+```
+
+```{r}
+# gammfit4 <- gamm(Sources ~ s(Depth1000) + fMonth, 
+#                  random = list(fStation =~ 1), 
+#                  data = ISIT2, 
+#                  weights = varComb(varIdent(form =~ 1 | fStation), 
+#                                    varPower(form =~ Depth1000 | fStation)), 
+#                  method = "REML", 
+#                  control = lmeControl(niterEM = 5000, msMaxIter = 1000))
+```
+
+```{r}
+AIC(gamfit1)
+AIC(gamfit2)
+AIC(gammfit3$lme)
+```
+
+```{r}
+library(cvTools)
+library(tidyverse)
+gamfit1$sp
+gamfit1$gcv.ubre
+```
+
+```{r}
+lambda <- seq(0.0001, 0.003, by = 0.0001)
+cv_score <- 0
+
+for (i in 1:length(lambda)) {
+  gam_init_fit <- gam(Sources ~ fStation + fMonth + s(Depth1000, sp = lambda[i]), data = ISIT2) 
+  #cvFit_1 <- cvFit(gam_init_fit, data = d, y = d$Sources16, K = length(Sources16), foldType = "consecutive")
+  cv_score[i] <- gam_init_fit$gcv.ubre
+}
+
+table <- data.frame(lambda, cv_score)
+table
+
+ggplot(data = table) +
+  aes(x = lambda, y = cv_score) +
+  geom_line()
+```
+
 ## LOESS Span Sizes
 
 <<<<<<< HEAD
