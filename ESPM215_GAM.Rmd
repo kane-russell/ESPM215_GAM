@@ -12,6 +12,17 @@ knitr::opts_chunk$set(echo = TRUE)
 - contrast GLM vs GAM graphs 
 - explain single variable GAM output
 - Exercise: try to visually choose optimal lambda parameter (Kane)
+
+```{r}
+lambda <- 1 ## try different values of lambda
+ISIT16 <- filter(ISIT2, fStation == 16)
+fit1 <- gam(Sources ~ s(Depth1000, sp = lambda), data = ISIT16)
+
+ggplot(ISIT16) + 
+  geom_point(aes(Depth1000, Sources)) + 
+  geom_line(aes(Depth1000, fitted(fit1)), color = 'red')
+```
+
 - Create lambda vs. GCV graph to choose optimal lambda (Kane)
 - Compare with automatic GCV from model fit (Kane)
 - Incorporating random effects with Knape data (Kane)
