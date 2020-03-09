@@ -87,10 +87,10 @@ fit2$sp # smoothing parameter lambda
 fit2$gcv.ubre # GCV score
 ```
 
-- Incorporating random effects with Knape data (Kane)
-    - Figure out difference between bs = "re" vs list....? (Kane & Dorothy)
-    
+## Incorporating random effects with Knape data
+
 ```{r}
+# using the gam() function (mgcv package)
 GC$fyr <- factor(GC$yr)
 GC_fit1 <- gam(count ~ s(fyr, bs = 're', k = 8) + 
                     #s(site, bs = 're') + # adding this term slows down gam() a lot!
@@ -106,6 +106,7 @@ summary(GC_fit1)
 ```
 
 ```{r}
+# using the gamm() function (mgcv package)
 GC$loglineCov <- log(GC$lineCov)
 GC_fit2 <- gamm(count ~ offset(loglineCov) + 
                         s(latitude) + 
@@ -121,12 +122,13 @@ summary(GC_fit2$lme)
 ```
 
 ```{r}
+# using the gamm4 function (gamm4 package)
 GC_fit3 <- gamm4(count ~ offset(log(lineCov)) + 
                         s(latitude) + 
                         s(observerAge, k = 20) + 
                         s(day) + 
                         firstSurvey, 
-                random =~ (1|site) + (1|fyr),
+                random = ~ (1|site) + (1|fyr),
                 family = quasipoisson(), 
                 data = GC)
 
@@ -134,8 +136,10 @@ summary(GC_fit2$gam)
 summary(GC_fit2$mer)
 ```
 
-
-- Discussion on paper?? (Kane & Dorothy)
+## Discussion on paper
+- What are the main takeaways of this paper?
+- How did the author use GAMMs to evaluate temporal trends in the bird count data?
+- What were the effects and implications of using automatic vs. fixed degrees of freedom?
 
 
 ### Different packages for GAM processing. 
