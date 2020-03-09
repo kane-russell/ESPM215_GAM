@@ -9,10 +9,11 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
+```{r include=FALSE}
 library(mgcv)
 library(nlme)
 library(tidyverse)
+library(gamm4)
 ```
 
 ```{r}
@@ -92,7 +93,7 @@ fit2$gcv.ubre # GCV score
 ```{r}
 GC$fyr <- factor(GC$yr)
 GC_fit1 <- gam(count ~ s(fyr, bs = 're', k = 8) + 
-                    #s(site, bs = 're') + 
+                    #s(site, bs = 're') + # adding this term slows down gam() a lot!
                     s(latitude) + 
                     s(observerAge, k = 20) + 
                     s(day) + 
@@ -106,20 +107,33 @@ summary(GC_fit1)
 
 ```{r}
 GC$loglineCov <- log(GC$lineCov)
-GC_fit2 <- gamm(count ~ s(fyr, bs = 're', k = 8) + 
-                        #(site, bs = 're') + 
-                        offset(loglineCov) + 
+GC_fit2 <- gamm(count ~ offset(loglineCov) + 
                         s(latitude) + 
                         s(observerAge, k = 20) + 
                         s(day) + 
                         firstSurvey, 
-                random = list(site =~ 1),
+                random = list(site =~ 1, fyr =~ 1),
                 family = quasipoisson(), 
                 data = GC)
 
 summary(GC_fit2$gam)
 summary(GC_fit2$lme)
 ```
+
+```{r}
+GC_fit3 <- gamm4(count ~ offset(log(lineCov)) + 
+                        s(latitude) + 
+                        s(observerAge, k = 20) + 
+                        s(day) + 
+                        firstSurvey, 
+                random =~ (1|site) + (1|fyr),
+                family = quasipoisson(), 
+                data = GC)
+
+summary(GC_fit2$gam)
+summary(GC_fit2$mer)
+```
+
 
 - Discussion on paper?? (Kane & Dorothy)
 
