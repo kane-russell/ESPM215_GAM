@@ -66,6 +66,35 @@ library(tidyverse)
 
 ```
 
+```{r}
+ISIT$fMonth <- factor(ISIT$Month)
+ISIT$fStation <- factor(ISIT$Station)
+ISIT$fYear <- factor(ISIT$Year)
+ISIT2 <- ISIT[ISIT$fStation != "4" &
+              ISIT$fStation != "5" &
+              ISIT$fStation != "10" ,]
+ISIT2$Depth1000 <- ISIT2$SampleDepth/1000
+head(ISIT2)
+```
+
+# Comparing GLMs to GAMs
+
+```{r, echo = TRUE}
+
+glmfit1 <- glm(Sources ~ fStation + Depth1000 + fMonth, 
+               data = ISIT2, family = gaussian(link = "identity"))
+par(mfrow = c(2, 2))
+plot(glmfit1)
+summary(glmfit1)
+
+gamfit1 <- gam(Sources ~ fStation + s(Depth1000) + fMonth, 
+               data = ISIT2)
+par(mfrow = c(1, 1))
+plot(gamfit1)
+gam.check(gamfit1)
+summary(gamfit1)
+```
+
 
 # Single value GAM fitting and talking about the R output 
 
@@ -78,16 +107,6 @@ $ \epsilon_{i} \sim N(0, \sigma^{2})$
 ### INclude observed values on the fitted line 
 
 =======
-```{r}
-ISIT$fMonth <- factor(ISIT$Month)
-ISIT$fStation <- factor(ISIT$Station)
-ISIT$fYear <- factor(ISIT$Year)
-ISIT2 <- ISIT[ISIT$fStation != "4" &
-              ISIT$fStation != "5" &
-              ISIT$fStation != "10" ,]
-ISIT2$Depth1000 <- ISIT2$SampleDepth/1000
-head(ISIT2)
-```
 
 ```{r}
 gamfit1 <- gam(Sources ~ fStation + s(Depth1000) + fMonth, 
