@@ -1,7 +1,7 @@
 ---
 title: "ESPM 215 - Generalized Additive Models (GAMs)"
 author: "Dorothy Chen, Kenzo Esquivel, Kane Russell, and Yvonne Socolar"
-date: "2/25/2020"
+date: "3/11/2020"
 output: html_document
 ---
 
@@ -87,30 +87,12 @@ summary(gamfit1)
 
 ## Visually choose optimal lambda
 ```{r}
-lambda <- 1 ### try different values of lambda
-ISIT16 <- filter(ISIT2, fStation == 16)
-fit1 <- gam(Sources ~ s(Depth1000, sp = lambda), data = ISIT16)
-depth_seq <- data.frame(Depth1000 = seq(min(ISIT16$Depth1000), max(ISIT16$Depth1000), length = 100))
-pred <- predict.gam(fit1, depth_seq)
 
-ggplot() + 
-  geom_point(aes(Depth1000, Sources), ISIT16) + 
-  geom_line(aes(depth_seq$Depth1000, pred), color = 'red')
 ```
 
 ## Create lambda vs. GCV graph to choose optimal lambda
 ```{r}
-lambda <- ### try a range of lambda values
-GCV <- 0
 
-for (i in 1:length(lambda)) {
-  gam_fit <- gam(Sources ~ s(Depth1000, sp = lambda[i]), data = ISIT16) 
-  GCV[i] <- gam_fit$gcv.ubre
-}
-
-ggplot(data.frame(lambda, GCV)) +
-  aes(lambda, GCV) + 
-  geom_line()
 ```
 
 ## Compare with automatic GCV from model fit
@@ -197,13 +179,4 @@ There are a number of different packages for GAM in R.
 Michael Clark's [GAM vignette](https://m-clark.github.io/generalized-additive-models/technical.html) provides a more extensive discussion of all things GAM. 
 
 MSU also put together an [R-lab on GAMs](http://ecology.msu.montana.edu/labdsv/R/labs/lab5/lab5.html). 
-
-
-
-
-
-
-
-
-
 
