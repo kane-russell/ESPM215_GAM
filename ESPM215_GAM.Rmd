@@ -9,91 +9,17 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-- contrast GLM vs GAM graphs 
-- explain single variable GAM output
-- Exercise: try to visually choose optimal lambda parameter
-
 ```{r}
-lambda <- ### try different values of lambda
-ISIT16 <- filter(ISIT2, fStation == 16)
-fit1 <- gam(Sources ~ s(Depth1000, sp = lambda), data = ISIT16)
-depth_seq <- data.frame(Depth1000 = seq(min(ISIT16$Depth1000), max(ISIT16$Depth1000), length = 100))
-pred <- predict.gam(fit1, depth_seq)
-
-ggplot() + 
-  geom_point(aes(Depth1000, Sources), ISIT16) + 
-  geom_line(aes(depth_seq$Depth1000, pred), color = 'red')
-```
-
-- Create lambda vs. GCV graph to choose optimal lambda
-
-```{r}
-lambda <- ### try a range of lambda values
-GCV <- 0
-
-for (i in 1:length(lambda)) {
-  gam_fit <- gam(Sources ~ s(Depth1000, sp = lambda[i]), data = ISIT16) 
-  GCV[i] <- gam_fit$gcv.ubre
-}
-
-ggplot(data.frame(lambda, GCV)) +
-  aes(lambda, GCV) + 
-  geom_line()
-```
-
-- Compare with automatic GCV from model fit
-
-```{r}
-fit2 <- gam(Sources ~ s(Depth1000), data = ISIT16)
-summary(fit2)
-
-fit2$sp
-fit2$gcv.ubre
-
-```
-
-- Incorporating random effects with Knape data (Kane)
-    - Figure out difference between bs = "re" vs list....? (Kane & Dorothy)
-- Discussion on paper?? (Kane & Dorothy)
-
-
-
-## Potential datasets
-```{r}
-ISIT <- read.delim('ISIT.txt') # bioluminescence dataset (Zuur Ch. 3, 17)
-RK <- read.delim('RoadKills.txt') # amphibian roadkills dataset (Zuur Ch. 16)
-GF <- read.csv('jpe12720-sup-0003-apps2-greenfinch.csv')
-GC <- read.csv('jpe12720-sup-0002-apps2-goldcrest.csv')
-head(ISIT)
-head(RK)
-head(GF)
-head(GC)
-```
-
-### Different packages for GAM processing. 
-
-There are a number of different packages for GAM in R. 
-  - the *gam* package was written by Hastie and Tibshirani (credited for introducing GAMs) and estimates the smoothing functions using a back-fitting algorithm (which allows for estimation of one smoother at a time)   \
-  - the *mgcv* package, standing for "Mixed GAM Computation Vehicle with Automatic Smoothness Estimation", was introduced by Wood, and uses splines (which reduces function approximation error for a given dimension of smoothing basis). This package can handle large datasets, do cross validation, and allow for expansions into Generalized Additive Mixed Modeling (GAMM) frameworks. GAMM fitting relies on the nmle package, which is great for normally distributed models but not suitable for Poisson or Binomial GLMMs. A detailed walkthrough can be found at [this site](https://people.maths.bris.ac.uk/~sw15190/mgcv/tampere/mgcv.pdf)    \
-  - the *gamm4* package, which is similar to the *mgcv* package but relies on the lme4 package for calculations (Fabian Scheipl trick)  \
-
-```{r, echo = TRUE, message=FALSE, eval = F}
-install.packages("gam")
-install.packages("mgcv")
-install.packages("gamm4")
-
-```
-
-```{r, echo = TRUE}
-#library(gam)
 library(mgcv)
-#library(gamm4)
 library(nlme)
 library(tidyverse)
-
 ```
 
 ```{r}
+ISIT <- read.delim('ISIT.txt') # bioluminescence dataset (Zuur Ch. 3, 17)
+GF <- read.csv('jpe12720-sup-0003-apps2-greenfinch.csv') # green finch count data, Knape 2016
+GC <- read.csv('jpe12720-sup-0002-apps2-goldcrest.csv') # gold crest count data, Knape 2016
+
 ISIT$fMonth <- factor(ISIT$Month)
 ISIT$fStation <- factor(ISIT$Station)
 ISIT$fYear <- factor(ISIT$Year)
@@ -101,7 +27,6 @@ ISIT2 <- ISIT[ISIT$fStation != "4" &
               ISIT$fStation != "5" &
               ISIT$fStation != "10" ,]
 ISIT2$Depth1000 <- ISIT2$SampleDepth/1000
-head(ISIT2)
 ```
 
 # Comparing GLMs to GAMs
@@ -122,6 +47,90 @@ gam.check(gamfit1)
 summary(gamfit1)
 ```
 
+## explain single variable GAM output
+
+## Visually choose optimal lambda
+```{r}
+lambda <- 1 ### try different values of lambda
+ISIT16 <- filter(ISIT2, fStation == 16)
+fit1 <- gam(Sources ~ s(Depth1000, sp = lambda), data = ISIT16)
+depth_seq <- data.frame(Depth1000 = seq(min(ISIT16$Depth1000), max(ISIT16$Depth1000), length = 100))
+pred <- predict.gam(fit1, depth_seq)
+
+ggplot() + 
+  geom_point(aes(Depth1000, Sources), ISIT16) + 
+  geom_line(aes(depth_seq$Depth1000, pred), color = 'red')
+```
+
+## Create lambda vs. GCV graph to choose optimal lambda
+```{r}
+lambda <- ### try a range of lambda values
+GCV <- 0
+
+for (i in 1:length(lambda)) {
+  gam_fit <- gam(Sources ~ s(Depth1000, sp = lambda[i]), data = ISIT16) 
+  GCV[i] <- gam_fit$gcv.ubre
+}
+
+ggplot(data.frame(lambda, GCV)) +
+  aes(lambda, GCV) + 
+  geom_line()
+```
+
+## Compare with automatic GCV from model fit
+```{r}
+fit2 <- gam(Sources ~ s(Depth1000), data = ISIT16)
+summary(fit2)
+
+fit2$sp # smoothing parameter lambda
+fit2$gcv.ubre # GCV score
+```
+
+- Incorporating random effects with Knape data (Kane)
+    - Figure out difference between bs = "re" vs list....? (Kane & Dorothy)
+    
+```{r}
+GC$fyr <- factor(GC$yr)
+GC_fit1 <- gam(count ~ s(fyr, bs = 're', k = 8) + 
+                    #s(site, bs = 're') + 
+                    s(latitude) + 
+                    s(observerAge, k = 20) + 
+                    s(day) + 
+                    firstSurvey + 
+                    offset(log(lineCov)), 
+            family = quasipoisson(), 
+            data = GC)
+
+summary(GC_fit1)
+```
+
+```{r}
+GC$loglineCov <- log(GC$lineCov)
+GC_fit2 <- gamm(count ~ s(fyr, bs = 're', k = 8) + 
+                        #(site, bs = 're') + 
+                        offset(loglineCov) + 
+                        s(latitude) + 
+                        s(observerAge, k = 20) + 
+                        s(day) + 
+                        firstSurvey, 
+                random = list(site =~ 1),
+                family = quasipoisson(), 
+                data = GC)
+
+summary(GC_fit2$gam)
+summary(GC_fit2$lme)
+```
+
+- Discussion on paper?? (Kane & Dorothy)
+
+
+### Different packages for GAM processing. 
+
+There are a number of different packages for GAM in R. 
+  - the *gam* package was written by Hastie and Tibshirani (credited for introducing GAMs) and estimates the smoothing functions using a back-fitting algorithm (which allows for estimation of one smoother at a time)   \
+  - the *mgcv* package, standing for "Mixed GAM Computation Vehicle with Automatic Smoothness Estimation", was introduced by Wood, and uses splines (which reduces function approximation error for a given dimension of smoothing basis). This package can handle large datasets, do cross validation, and allow for expansions into Generalized Additive Mixed Modeling (GAMM) frameworks. GAMM fitting relies on the nmle package, which is great for normally distributed models but not suitable for Poisson or Binomial GLMMs. A detailed walkthrough can be found at [this site](https://people.maths.bris.ac.uk/~sw15190/mgcv/tampere/mgcv.pdf)    \
+  - the *gamm4* package, which is similar to the *mgcv* package but relies on the lme4 package for calculations (Fabian Scheipl trick)  \
+
 
 # Single value GAM fitting and talking about the R output 
 
@@ -135,80 +144,17 @@ $ \epsilon_{i} \sim N(0, \sigma^{2})$
 
 =======
 
-```{r}
-gamfit1 <- gam(Sources ~ fStation + s(Depth1000) + fMonth, 
-               data = ISIT2)
-plot(gamfit1)
-gam.check(gamfit1)
-summary(gamfit1)
-```
-
-```{r}
-gamfit2 <- mgcv::gam(Sources ~ s(fStation, bs = 're') + s(Depth1000) + fMonth, 
-               data = ISIT2)
-plot(gamfit2)
-gam.check(gamfit2)
-summary(gamfit2)
-```
-
-```{r}
-gammfit3 <- gamm(Sources ~ s(Depth1000) + fMonth, 
-                 random = list(fStation =~ 1), 
-                 data = ISIT2)
-plot(gammfit3$gam)
-gam.check(gammfit3$gam)
-summary(gammfit3$gam)
-summary(gammfit3$lme)
-```
-
-```{r}
-# gammfit4 <- gamm(Sources ~ s(Depth1000) + fMonth, 
-#                  random = list(fStation =~ 1), 
-#                  data = ISIT2, 
-#                  weights = varComb(varIdent(form =~ 1 | fStation), 
-#                                    varPower(form =~ Depth1000 | fStation)), 
-#                  method = "REML", 
-#                  control = lmeControl(niterEM = 5000, msMaxIter = 1000))
-```
-
-```{r}
-AIC(gamfit1)
-AIC(gamfit2)
-AIC(gammfit3$lme)
-```
-
-```{r}
-gamfit1$sp
-gamfit1$gcv.ubre
-```
-
-```{r}
-library(tidyverse)
-
-lambda <- seq(0.0001, 0.002, by = 0.0001)
-GCV <- 0
-
-for (i in 1:length(lambda)) {
-  gam_fit <- gam(Sources ~ fStation + fMonth + s(Depth1000, sp = lambda[i]), data = ISIT2) 
-  GCV[i] <- gam_fit$gcv.ubre
-}
-
-table <- data.frame(lambda, GCV)
-table
-
-ggplot(data = table) +
-  aes(x = lambda, y = GCV) + 
-  geom_line()
-```
-
-```{r}
-plot(gam(Sources ~ fStation + fMonth + s(Depth1000, sp = 0.00011), data = ISIT2))
-plot(gam(Sources ~ fStation + fMonth + s(Depth1000, sp = 0.0011), data = ISIT2))
-plot(gam(Sources ~ fStation + fMonth + s(Depth1000, sp = 1.1), data = ISIT2))
-```
 
 
 # More complex spline fitting and incorporating multiple variables with different smoothing techniques 
+
+
+
+
+
+
+
+
 
 
 
