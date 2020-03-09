@@ -11,20 +11,47 @@ knitr::opts_chunk$set(echo = TRUE)
 
 - contrast GLM vs GAM graphs 
 - explain single variable GAM output
-- Exercise: try to visually choose optimal lambda parameter (Kane)
+- Exercise: try to visually choose optimal lambda parameter
 
 ```{r}
-lambda <- 1 ## try different values of lambda
+lambda <- ### try different values of lambda
 ISIT16 <- filter(ISIT2, fStation == 16)
 fit1 <- gam(Sources ~ s(Depth1000, sp = lambda), data = ISIT16)
+depth_seq <- data.frame(Depth1000 = seq(min(ISIT16$Depth1000), max(ISIT16$Depth1000), length = 100))
+pred <- predict.gam(fit1, depth_seq)
 
-ggplot(ISIT16) + 
-  geom_point(aes(Depth1000, Sources)) + 
-  geom_line(aes(Depth1000, fitted(fit1)), color = 'red')
+ggplot() + 
+  geom_point(aes(Depth1000, Sources), ISIT16) + 
+  geom_line(aes(depth_seq$Depth1000, pred), color = 'red')
 ```
 
-- Create lambda vs. GCV graph to choose optimal lambda (Kane)
-- Compare with automatic GCV from model fit (Kane)
+- Create lambda vs. GCV graph to choose optimal lambda
+
+```{r}
+lambda <- ### try a range of lambda values
+GCV <- 0
+
+for (i in 1:length(lambda)) {
+  gam_fit <- gam(Sources ~ s(Depth1000, sp = lambda[i]), data = ISIT16) 
+  GCV[i] <- gam_fit$gcv.ubre
+}
+
+ggplot(data.frame(lambda, GCV)) +
+  aes(lambda, GCV) + 
+  geom_line()
+```
+
+- Compare with automatic GCV from model fit
+
+```{r}
+fit2 <- gam(Sources ~ s(Depth1000), data = ISIT16)
+summary(fit2)
+
+fit2$sp
+fit2$gcv.ubre
+
+```
+
 - Incorporating random effects with Knape data (Kane)
     - Figure out difference between bs = "re" vs list....? (Kane & Dorothy)
 - Discussion on paper?? (Kane & Dorothy)
