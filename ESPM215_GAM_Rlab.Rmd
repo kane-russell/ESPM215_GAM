@@ -67,6 +67,10 @@ plot(glmfit1)
 plot(glmfit2)
 gam.check(gamfit1)
 
+# Normality
+# Homogeneity (residuals v fitted)
+# Model fit
+
 par(mfrow = c(1, 1))
 boxplot(glmfit1$residuals,gamfit1$residuals, glmfit2$residuals, gamfit2$residuals,
             names=c("GLM 1","GAM1","GLM 2", "GAM2"))
@@ -76,6 +80,7 @@ summary(glmfit1)
 
 # GAM output
 summary(gamfit1)
+anova(gamfit1)
 
 ```
 
@@ -84,6 +89,8 @@ summary(gamfit1)
   - p-values: p-values should be interpeted with caution
   - $r^{2}$ value: can be used for standard Gaussian setting, adjusted $r^{2}$ = "deviance explained"
   - GCV = generalized cross validation score = mean of estimated MSE based on LOOCV
+  - Scale est: variance on the residuals 
+  - 
 
 ## Visually choose optimal lambda
 ```{r}
