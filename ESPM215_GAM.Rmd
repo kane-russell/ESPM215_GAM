@@ -77,6 +77,9 @@ summary(glmfit1)
 # GAM output
 summary(gamfit1)
 
+# AIC comparison
+AIC(glmfit1, gamfit1)
+
 ```
 
 ## Notes about interpreting GAM output 
@@ -148,12 +151,14 @@ GC_fit2 <- gamm(count ~ offset(loglineCov) +
                         s(observerAge, k = 20) + 
                         s(day) + 
                         firstSurvey, 
-                random =  fyr =~ 1,
+                random = list(fyr =~ 1),# random effect, has to be in list form
                 family = quasipoisson(), 
                 data = GC)
 
-summary(GC_fit2$gam)
+summary(GC_fit2$gam) 
 summary(GC_fit2$lme)
+
+
 ```
 
 ```{r}
@@ -167,8 +172,8 @@ GC_fit3 <- gamm4(count ~ offset(log(lineCov)) +
                 family = quasipoisson(), 
                 data = GC)
 
-summary(GC_fit2$gam)
-summary(GC_fit2$mer)
+summary(GC_fit3$gam)
+summary(GC_fit3$mer)
 ```
 
 ## Discussion on paper
@@ -198,8 +203,7 @@ Michael Clark's [GAM vignette](https://m-clark.github.io/generalized-additive-mo
 
 MSU also put together an [R-lab on GAMs](http://ecology.msu.montana.edu/labdsv/R/labs/lab5/lab5.html). 
 
-
-
+Jacolien van Rij wrote a vignette on [visualization of GAMM models](https://cran.r-project.org/web/packages/itsadug/vignettes/inspect.html). 
 
 
 
