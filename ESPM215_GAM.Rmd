@@ -90,7 +90,7 @@ AIC(glmfit1, gamfit1)
 
 ## Visually choose optimal lambda
 ```{r}
-lambda <- 1 ### try different values of lambda
+lambda <- 0.00025 ### try different values of lambda
 ISIT16 <- filter(ISIT2, fStation == 16)
 fit1 <- gam(Sources ~ s(Depth1000, sp = lambda), data = ISIT16)
 depth_seq <- data.frame(Depth1000 = seq(min(ISIT16$Depth1000), max(ISIT16$Depth1000), length = 100))
@@ -103,7 +103,7 @@ ggplot() +
 
 ## Create lambda vs. GCV graph to choose optimal lambda
 ```{r}
-lambda <- ### try a range of lambda values
+lambda <- seq(0, 0.001, by = 0.00001) ### try a range of lambda values
 GCV <- 0
 
 for (i in 1:length(lambda)) {
