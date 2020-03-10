@@ -18,10 +18,9 @@ library(gamm4)
 
 ```{r}
 ISIT <- read.delim('ISIT.txt') # bioluminescence dataset (Zuur Ch. 3, 17)
-GF <- read.csv('jpe12720-sup-0003-apps2-greenfinch.csv') # green finch count data, Knape 2016
 GC <- read.csv('jpe12720-sup-0002-apps2-goldcrest.csv') # gold crest count data, Knape 2016
 
-ISIT$fMonth <- factor(ISIT$Month)
+ISIT$fMonth <- factor(ISIT$Month) 
 ISIT$fStation <- factor(ISIT$Station)
 ISIT$fYear <- factor(ISIT$Year)
 ISIT2 <- ISIT[ISIT$fStation != "4" &
@@ -87,7 +86,7 @@ summary(gamfit1)
 
 ## Visually choose optimal lambda
 ```{r}
-
+ISIT16 <- filter(ISIT2, fStation == 16)
 ```
 
 ## Create lambda vs. GCV graph to choose optimal lambda
@@ -130,33 +129,10 @@ GC_fit2 <- gamm(count ~ offset(loglineCov) +
                         s(observerAge, k = 20) + 
                         s(day) + 
                         firstSurvey, 
-                random =  fyr =~ 1,
+                random =  list(fyr =~ 1),
                 family = quasipoisson(), 
                 data = GC)
-
-summary(GC_fit2$gam)
-summary(GC_fit2$lme)
 ```
-
-```{r}
-# using the gamm4 function (gamm4 package)
-GC_fit3 <- gamm4(count ~ offset(log(lineCov)) + 
-                        s(latitude) + 
-                        s(observerAge, k = 20) + 
-                        s(day) + 
-                        firstSurvey, 
-                random = ~ (1|site) + (1|fyr),
-                family = quasipoisson(), 
-                data = GC)
-
-summary(GC_fit2$gam)
-summary(GC_fit2$mer)
-```
-
-## Discussion on paper
-- What are the main takeaways of this paper?
-- How did the author use GAMMs to evaluate temporal trends in the bird count data?
-- What were the effects and implications of using automatic vs. fixed degrees of freedom?
 
 =======
 
